@@ -1,0 +1,27 @@
+version: "5.1.4"
+services:
+    webserver:
+        build: ./requirements/nginx
+        container_name: webserver
+        ports:
+            - "443:443"
+        restart: unless-stopped
+
+    database:
+        build: ./requirements/mariadb
+        container_name: database
+        environment:
+            - name=value
+        ports:
+            - "3306:3306"
+        restart: unless-stopped
+
+    wordpress:
+        build: ./requirements/wordpress
+        container_name: wordpress
+        ports:
+            - "80:80"
+        depends_on:
+            - webserver
+            - database
+        restart: unless-stopped
