@@ -16,7 +16,6 @@ RUN			apt-get update && \
 				php8.2-intl \
 				php8.2-soap \
 				php8.2-bcmath \
-				php8.2-json \
 				php8.2-cli \
 				php8.2-readline \
 				php8.2-ldap \
