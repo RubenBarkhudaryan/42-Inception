@@ -4,13 +4,13 @@ RUN			apt-get update \
 			&& apt-get install -y nginx openssl \
 			&& apt-get clean
 
-COPY		./tools/script.sh	 /script.sh
+COPY		./tools/nginx.sh	 /nginx.sh
 COPY		./conf/default.conf /etc/nginx/nginx.conf
 
-RUN			chmod +x script.sh
+RUN			chmod +x /nginx.sh
 
 EXPOSE		443/tcp
 
-ENTRYPOINT	["/script.sh"]
+ENTRYPOINT	["/nginx.sh"]
 
 CMD			["nginx", "-g", "daemon off;"]

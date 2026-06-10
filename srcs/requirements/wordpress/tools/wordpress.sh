@@ -4,6 +4,13 @@ cd /var/www/html
 
 rm -rf *
 
+if [ ! -f "$MYSQL_PASSWORD_FILE" ]; then
+    echo "Missing database password secret file."
+    exit 1
+fi
+
+MYSQL_PASSWORD=$(cat "$MYSQL_PASSWORD_FILE")
+
 # Download and set up WordPress using WP-CLI
 if wp core download --allow-root; then
     echo "WordPress core downloaded successfully."
@@ -12,22 +19,29 @@ else
     exit 1
 fi
 
-if [ ! -f wp-config.php ]; then
-    if cp wp-config-sample.php wp-config.php; then
-        echo "wp-config.php created."
-    else
-        echo "Failed to create wp-config.php."
-        exit 1
-    fi
+if wp config create \
+    --dbname="$MYSQL_DATABASE" \
+    --dbuser="$MYSQL_USER" \
+    --dbpass="$MYSQL_PASSWORD" \
+    --dbhost="$MYSQL_HOSTNAME" \
+    --allow-root \
+    --skip-check; then
+    echo "wp-config.php created with database credentials."
+else
+    echo "Failed to create wp-config.php."
+    exit 1
 fi
 
-if sed -i "s/define( 'DB_NAME', '.*' );/define( 'DB_NAME', '${MYSQL_DATABASE}' );/g" wp-config.php && \
-   sed -i "s/define( 'DB_USER', '.*' );/define( 'DB_USER', '${MYSQL_USER}' );/g" wp-config.php && \
-   sed -i "s/define( 'DB_PASSWORD', '.*' );/define( 'DB_PASSWORD', '$(cat ${WORDPRESS_DB_PASSWORD_FILE})' );/g" wp-config.php && \
-   sed -i "s/define( 'DB_HOST', '.*' );/define( 'DB_HOST', '${MYSQL_HOSTNAME}' );/g" wp-config.php; then
-    echo "Database credentials updated in wp-config.php."
-else
-    echo "Failed to update database credentials in wp-config.php."
+for _ in 1 2 3 4 5; do
+    if wp db check --allow-root >/dev/null 2>&1; then
+        break
+    fi
+
+    sleep 2
+done
+
+if ! wp db check --allow-root >/dev/null 2>&1; then
+    echo "Database is not ready."
     exit 1
 fi
 
@@ -66,7 +80,7 @@ fi
 mkdir -p /run/php
 chown -R www-data:www-data /run/php
 
-if wp theme install twentyfourteen --activate --allow-root; then
+if wp theme install twentytwentytwo --activate --allow-root; then
     echo "WordPress theme installed and activated successfully."
 else
     echo "Failed to install and activate WordPress theme."
