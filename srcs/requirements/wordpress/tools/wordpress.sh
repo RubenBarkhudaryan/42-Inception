@@ -23,7 +23,7 @@ fi
 
 if sed -i "s/define( 'DB_NAME', '.*' );/define( 'DB_NAME', '${MYSQL_DATABASE}' );/g" wp-config.php && \
    sed -i "s/define( 'DB_USER', '.*' );/define( 'DB_USER', '${MYSQL_USER}' );/g" wp-config.php && \
-   sed -i "s/define( 'DB_PASSWORD', '.*' );/define( 'DB_PASSWORD', '${MYSQL_PASSWORD}' );/g" wp-config.php && \
+   sed -i "s/define( 'DB_PASSWORD', '.*' );/define( 'DB_PASSWORD', '$(cat ${WORDPRESS_DB_PASSWORD_FILE})' );/g" wp-config.php && \
    sed -i "s/define( 'DB_HOST', '.*' );/define( 'DB_HOST', '${MYSQL_HOSTNAME}' );/g" wp-config.php; then
     echo "Database credentials updated in wp-config.php."
 else

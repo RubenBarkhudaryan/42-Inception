@@ -44,3 +44,10 @@ EXPOSE		9000
 ENTRYPOINT	["/wordpress.sh"]
 
 CMD			["php-fpm8.2", "-F"]
+
+# package php8.2-json has no installation candidate.
+
+# The php8.2-json package is not available in the Debian Bookworm repositories because, starting from PHP 8.0, the JSON extension is included in the core PHP distribution and does not require a separate package. Therefore, you can safely remove the php8.2-json package from your installation command, as it is already part of the PHP core and will be available when you install PHP 8.2.
+
+# so what ?
+
