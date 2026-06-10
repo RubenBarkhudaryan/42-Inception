@@ -2,7 +2,7 @@
 
 service mariadb start
 
-sleep 3
+sleep 2
 
 MYSQL_DB_USER=${MYSQL_DB_USER:-wordpress}
 MYSQL_DB_NAME=${MYSQL_DB_NAME:-wordpress}

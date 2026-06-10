@@ -4,11 +4,13 @@ services:
     webserver:
         build: ./requirements/nginx
         container_name: webserver
+        volumes:
+            - wordpress_data:/var/www/html
         networks:
             - inception
         ports:
             - "443:443"
-        restart: always
+        restart: on-failure
 
     database:
         build: ./requirements/mariadb
@@ -27,7 +29,7 @@ services:
             - inception
         ports:
             - "3306:3306"
-        restart: always
+        restart: on-failure
 
     wordpress:
         build: ./requirements/wordpress
@@ -37,18 +39,17 @@ services:
         secrets:
             - db_password
         environment:
-            - WORDPRESS_DB_HOST=database:3306
-            - WORDPRESS_DB_USER=wordpress
             - WORDPRESS_DB_PASSWORD_FILE=db_password
-            - WORDPRESS_DB_NAME=wordpress
+        env_file:
+            - .env
         networks:
             - inception
         ports:
-            - "80:80"
+            - "9000:9000"
         depends_on:
             - webserver
             - database
-        restart: always
+        restart: on-failure
 
 volumes:
     db_data:
@@ -61,6 +62,6 @@ networks:
 
 secrets:
     db_password:
-        file: ./secrets/db_password.txt
+        file: /home/rub/projects/Inception/secrets/db_password.txt
     db_root_password:
-        file: ./secrets/db_root_password.txt
+        file: /home/rub/projects/Inception/secrets/db_root_password.txt

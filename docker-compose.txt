@@ -1,0 +1,121 @@
+version: "5.1.4"
+
+services:
+    webserver:
+        build: ./requirements/nginx
+        container_name: webserver
+        networks:
+            - inception
+        ports:
+            - "443:443"
+        restart: always
+
+    database:
+        build: ./requirements/mariadb
+        container_name: database
+        volumes:
+            - db_data:/var/lib/mysql
+        secrets:
+            - db_password
+            - db_root_password
+        environment:
+            - MYSQL_USER=wordpress
+            - MYSQL_DATABASE=wordpress
+            - MYSQL_PASSWORD_FILE=db_password
+            - MYSQL_ROOT_PASSWORD_FILE=db_root_password
+        networks:
+            - inception
+        ports:
+            - "3306:3306"
+        restart: always
+
+    wordpress:
+        build: ./requirements/wordpress
+        container_name: wordpress
+        volumes:
+            - wordpress_data:/var/www/html
+        secrets:
+            - db_password
+        environment:
+            - WORDPRESS_DB_HOST=database:3306
+            - WORDPRESS_DB_USER=wordpress
+            - WORDPRESS_DB_PASSWORD_FILE=db_password
+            - WORDPRESS_DB_NAME=wordpress
+        networks:
+            - inception
+        ports:
+            - "9000:9000"
+        depends_on:
+            - webserver
+            - database
+        restart: always
+
+# 9000:80 ?
+
+# 9000:80 means that the port 80 of the container (where the WordPress application is running) is mapped to port 9000 on the host machine. This allows you to access the WordPress site by navigating to http://localhost:9000 in your web browser.
+
+# but according to subject what should we do ?
+# shouldn't the wordpress be accessible with domain rbarkhud.42.fr ?
+# Yes, you are correct. The WordPress site should be accessible using the domain rbarkhud.42.fr. To achieve this, you need to ensure that your DNS settings are correctly configured to point rbarkhud.42.fr to the IP address of your host machine where the Docker containers are running.
+
+# and this has nothing to do with the port mapping in the docker-compose file, right ?
+# The port mapping in the docker-compose file is necessary to allow access to the WordPress application from outside the Docker network. However, the domain name (rbarkhud.42.fr) is handled separately through DNS settings. You need to make sure that the domain name is correctly pointed to your host machine's IP address, and that your web server (nginx in this case) is configured to serve the WordPress site when requests are made to rbarkhud.42.fr. This typically involves setting up a server block in your nginx configuration that listens for requests to rbarkhud.42.fr and serves the WordPress application accordingly.
+
+# this is really funny my friends don't even do port mapping and they just did the expose in dockerfile and it works for them, why is that ?The reason your friends might be able to access their WordPress site without explicitly mapping ports in the docker-compose file could be due to a few reasons:
+
+# 1. They might be using Docker's default network settings, which allow containers to communicate with each other using their service names as hostnames. In this case, they can access the WordPress container from the webserver container without needing to map ports to the host machine.
+
+# 2. They might be accessing the WordPress site from within the Docker network (e.g., from another container) rather than from the host machine. In this case, they can use the service name (e.g., "wordpress") to access the application without needing to map ports.
+
+# so when I create the network "inception" I am able to connect my containers without port mapping ? 
+
+# Yes, when you create a custom network like "inception" in Docker, the containers that are connected to that network can communicate with each other using their service names as hostnames. This means that the webserver container can access the WordPress container using the hostname "wordpress" without needing to map ports to the host machine. However, if you want to access the WordPress site from outside the Docker network (e.g., from your web browser on your host machine), you will still need to map the appropriate ports in the docker-compose file.
+
+# so I can just simply write expose in dockerfile and it will work ?
+
+# Yes, you can use the EXPOSE instruction in your Dockerfile to indicate which ports the container will listen on at runtime. However, the EXPOSE instruction does not actually publish the ports to the host machine; it is more of a documentation feature that informs users of the container which ports are intended to be used. To make the application accessible from outside the Docker network, you still need to use port mapping in your docker-compose file (e.g., "443:443") to map the container's ports to the host machine's ports.
+
+# if I decide to use ports in docker compose file anyway. how should I configure them ?
+
+# If you decide to use port mapping in your docker-compose file, you should configure it based on the ports that your application is listening on inside the container. For example, if your WordPress application is listening on port 80 inside the container, and you want to access it from your host machine, you can map it like this:
+# ```yamlports:
+#     - "80:80"
+# ```
+# This means that port 80 on the host machine will be forwarded to port 80 in the container. If you want to use a different port on the host machine (e.g., 9000), you can configure it like this:
+# ```yamlports:
+#     - "9000:80"
+# ```
+# This means that port 9000 on the host machine will be forwarded to port 80 in the container. You can choose any available port on the host machine for the left side of the mapping, but the right side should match the port that your application is listening on inside the container. In this case, since WordPress typically listens on port 80, you would map it to port 80 in the container.
+
+# i think I'll do this like this: 
+
+# ports:
+#     - "9000:9000"
+# for wordpress 
+
+# ports:
+#     - "3306:3306"
+# for mariadb 
+
+# and in nginx config file I will set the proxy_pass to http://wordpress:9000
+
+# is it correct solution ? 
+
+# Yes, that is a correct solution. By mapping port 9000 on the host machine to port 9000 in the WordPress container, you can access the WordPress application through port 9000 on your host machine. In your nginx configuration file, you can set the proxy_pass directive to http://wordpress:9000 to forward requests from nginx to the WordPress container. Just make sure that your WordPress application is configured to listen on port 9000 inside the container for this setup to work properly.
+
+# ok. Then lets configure the wordpress dockerfile then conf and script also to listen on port 9000 instead of 80.
+
+volumes:
+    db_data:
+    wordpress_data:
+
+networks:
+    inception:
+        driver: bridge
+        name: inception
+
+secrets:
+    db_password:
+        file: /home/rub/projects/Inception/secrets/db_password.txt
+    db_root_password:
+        file: /home/rub/projects/Inception/secrets/db_root_password.txt
