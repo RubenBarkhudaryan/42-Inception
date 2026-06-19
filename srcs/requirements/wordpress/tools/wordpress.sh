@@ -4,12 +4,9 @@ cd /var/www/html
 
 rm -rf *
 
-if [ ! -f "$MYSQL_PASSWORD_FILE" ]; then
-    echo "Missing database password secret file."
-    exit 1
-fi
-
-MYSQL_PASSWORD=$(cat "$MYSQL_PASSWORD_FILE")
+MYSQL_PASSWORD=$(cat /run/secrets/db_password)
+WORDPRESS_ROOT_PASSWORD=$(cat /run/secrets/wordpress_root_password)
+WORDPRESS_USER_PASSWORD=$(cat /run/secrets/wordpress_user_password)
 
 # Download and set up WordPress using WP-CLI
 if wp core download --allow-root; then
@@ -62,9 +59,6 @@ if wp user create "$WORDPRESS_USER_USERNAME" "$WORDPRESS_USER_EMAIL" \
     --user_pass="$WORDPRESS_USER_PASSWORD" \
     --allow-root; then
     echo "WordPress user created successfully."
-else
-    echo "Failed to create WordPress user."
-    exit 1
 fi
 
 chown -R www-data:www-data /var/www/html

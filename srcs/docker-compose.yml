@@ -5,43 +5,43 @@ services:
         build: ./requirements/nginx
         container_name: webserver
         volumes:
-            - wordpress_data:/var/www/html
+            - wordpress_data:/var/www/
         networks:
             - inception
         ports:
             - "443:443"
+        env_file:
+            - .env
         depends_on:
             - wordpress
-        restart: on-failure
+        restart: always
 
     database:
         build: ./requirements/mariadb
         container_name: database
         volumes:
-            - db_data:/var/lib/mysql
+            - db_data:/var/lib/mysql/
         secrets:
             - db_password
             - db_root_password
         environment:
             - MYSQL_USER=wordpress
             - MYSQL_DATABASE=wordpress
-            - MYSQL_PASSWORD_FILE=/run/secrets/db_password
-            - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
         networks:
             - inception
         ports:
             - "3306:3306"
-        restart: on-failure
+        restart: always
 
     wordpress:
         build: ./requirements/wordpress
         container_name: wordpress
         volumes:
-            - wordpress_data:/var/www/html
+            - wordpress_data:/var/www/
         secrets:
             - db_password
-        environment:
-            - MYSQL_PASSWORD_FILE=/run/secrets/db_password
+            - wordpress_root_password
+            - wordpress_user_password
         env_file:
             - .env
         networks:
@@ -50,11 +50,19 @@ services:
             - "9000:9000"
         depends_on:
             - database
-        restart: on-failure
+        restart: always
 
 volumes:
     db_data:
+        driver_opts:
+            o: bind
+            type: none
+            device: /home/rub/data/wordpress
     wordpress_data:
+        driver_opts:
+            o: bind
+            type: none
+            device: /home/rub/data/mariadb
 
 networks:
     inception:
@@ -63,6 +71,10 @@ networks:
 
 secrets:
     db_password:
-        file: /home/rub/Desktop/42-Inception/secrets/db_password.txt
+        file: ../secrets/db_password.txt
     db_root_password:
-        file: /home/rub/Desktop/42-Inception/secrets/db_root_password.txt
+        file: ../secrets/db_root_password.txt
+    wordpress_root_password:
+        file: ../secrets/wordpress_root_password.txt
+    wordpress_user_password:
+        file: ../secrets/wordpress_user_password.txt

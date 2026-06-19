@@ -1,11 +1,12 @@
 FROM		debian:bookworm-slim
 
 RUN			apt-get update \
-			&& apt-get install -y nginx openssl \
+			&& apt-get install --no-install-recommends -y nginx openssl \
 			&& apt-get clean
 
 COPY		./tools/nginx.sh	 /nginx.sh
-COPY		./conf/default.conf /etc/nginx/nginx.conf
+COPY		./conf/default.conf /etc/nginx/conf.d/default.conf
+
 
 RUN			chmod +x /nginx.sh
 

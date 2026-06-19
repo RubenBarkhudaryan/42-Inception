@@ -3,8 +3,7 @@ FROM		debian:bookworm-slim
 RUN			mkdir -p /var/www/html
 
 RUN			apt-get update && \
-			apt-get upgrade -y && \
-			apt-get install -y \
+			apt-get install --no-install-recommends -y \
 				php8.2 \
 				php8.2-fpm \
 				php8.2-mysql \
@@ -22,6 +21,7 @@ RUN			apt-get update && \
 				php8.2-tideways \
 				mariadb-client \
 				curl \
+				ca-certificates \
 				wget \
 				unzip \
 			&& apt-get clean && \
